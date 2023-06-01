@@ -1,4 +1,5 @@
 import 'dart:async';
+import 'dart:math';
 
 import 'package:flutter/material.dart';
 import 'package:snake_game/blank_pixel.dart';
@@ -25,35 +26,75 @@ class _HomePageState extends State<HomePage> {
     Timer.periodic(Duration(milliseconds: 200), (timer) {
       setState(() {
         moveSnake();
+        if (gameOver()) {
+          timer.cancel();
+
+          showDialog(
+              context: this.context,
+              builder: (BuildContext context) {
+                return new AlertDialog(
+                  title: Text('GAME OVER'),
+                );
+              });
+        }
       });
     });
+  }
+
+  void eatFood() {
+    while (snakePos.contains(foodPos)) {
+      foodPos = Random().nextInt(totalNumOfSquares);
+    }
   }
 
   void moveSnake() {
     switch (currentDirection) {
       case snake_Direction.RIGHT:
-        snakePos.add(snakePos.last + 1);
-
-        snakePos.removeAt(0);
+        if (snakePos.last % rowSize == 9) {
+          snakePos.add(snakePos.last + 1 - rowSize);
+        } else {
+          snakePos.add(snakePos.last + 1);
+        }
         break;
       case snake_Direction.LEFT:
-        snakePos.add(snakePos.last - 1);
-
-        snakePos.removeAt(0);
+        if (snakePos.last % rowSize == 0) {
+          snakePos.add(snakePos.last - 1 + rowSize);
+        } else {
+          snakePos.add(snakePos.last - 1);
+        }
         break;
       case snake_Direction.UP:
-        snakePos.add(snakePos.last - rowSize);
-
-        snakePos.removeAt(0);
+        if (snakePos.last < rowSize) {
+          snakePos.add(snakePos.last - rowSize + totalNumOfSquares);
+        } else {
+          snakePos.add(snakePos.last - rowSize);
+        }
         break;
       case snake_Direction.DOWN:
-        snakePos.add(snakePos.last + rowSize);
-
-        snakePos.removeAt(0);
+        if (snakePos.last + rowSize > totalNumOfSquares) {
+          snakePos.add(snakePos.last + rowSize - totalNumOfSquares);
+        } else {
+          snakePos.add(snakePos.last + rowSize);
+        }
         break;
 
       default:
     }
+
+    if (snakePos.last == foodPos) {
+      eatFood();
+    } else {
+      snakePos.removeAt(0);
+    }
+  }
+
+  bool gameOver() {
+    List<int> snakeBody = snakePos.sublist(0, snakePos.length - 1);
+
+    if (snakeBody.contains(snakePos.last)) {
+      return true;
+    }
+    return false;
   }
 
   @override
@@ -69,16 +110,20 @@ class _HomePageState extends State<HomePage> {
             flex: 3,
             child: GestureDetector(
               onVerticalDragUpdate: (details) {
-                if (details.delta.dy > 0) {
+                if (details.delta.dy > 0 &&
+                    currentDirection != snake_Direction.UP) {
                   currentDirection = snake_Direction.DOWN;
-                } else if (details.delta.dy < 0) {
+                } else if (details.delta.dy < 0 &&
+                    currentDirection != snake_Direction.DOWN) {
                   currentDirection = snake_Direction.UP;
                 }
               },
               onHorizontalDragUpdate: (details) {
-                if (details.delta.dx > 0) {
+                if (details.delta.dx > 0 &&
+                    currentDirection != snake_Direction.LEFT) {
                   currentDirection = snake_Direction.RIGHT;
-                } else if (details.delta.dx < 0) {
+                } else if (details.delta.dx < 0 &&
+                    currentDirection != snake_Direction.RIGHT) {
                   currentDirection = snake_Direction.LEFT;
                 }
               },
