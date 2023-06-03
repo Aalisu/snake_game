@@ -20,9 +20,12 @@ class _HomePageState extends State<HomePage> {
   int totalNumOfSquares = 100;
   List<int> snakePos = [0, 1, 2];
   int foodPos = 55;
+  int currentScore = 0;
+  bool gameStarted = false;
   var currentDirection = snake_Direction.RIGHT;
 
   void gameStart() {
+    gameStarted = true;
     Timer.periodic(Duration(milliseconds: 200), (timer) {
       setState(() {
         moveSnake();
@@ -30,10 +33,31 @@ class _HomePageState extends State<HomePage> {
           timer.cancel();
 
           showDialog(
-              context: this.context,
+              context: context,
+              barrierDismissible: false,
               builder: (BuildContext context) {
-                return new AlertDialog(
+                return AlertDialog(
                   title: Text('GAME OVER'),
+                  content: Column(
+                    children: [
+                      Text('Your score is:' + currentScore.toString()),
+                      TextField(
+                        decoration:
+                            InputDecoration(hintText: 'Enter your name'),
+                      )
+                    ],
+                  ),
+                  actions: [
+                    MaterialButton(
+                      onPressed: () {
+                        Navigator.pop(context);
+                        submitScore();
+                        newGame();
+                      },
+                      child: Text('Submit'),
+                      color: Colors.pink,
+                    )
+                  ],
                 );
               });
         }
@@ -41,7 +65,20 @@ class _HomePageState extends State<HomePage> {
     });
   }
 
+  void newGame() {
+    setState(() {
+      snakePos = [0, 1, 2];
+      foodPos = 55;
+      currentDirection = snake_Direction.RIGHT;
+      gameStarted = false;
+      currentScore = 0;
+    });
+  }
+
+  void submitScore() {}
+
   void eatFood() {
+    currentScore++;
     while (snakePos.contains(foodPos)) {
       foodPos = Random().nextInt(totalNumOfSquares);
     }
@@ -104,7 +141,28 @@ class _HomePageState extends State<HomePage> {
       body: Column(
         children: [
           Expanded(
-            child: Container(),
+            child: Row(
+              mainAxisAlignment: MainAxisAlignment.spaceEvenly,
+              children: [
+                Column(
+                  mainAxisAlignment: MainAxisAlignment.center,
+                  children: [
+                    const Text(
+                      'Current Score',
+                      style: TextStyle(color: Colors.white),
+                    ),
+                    Text(
+                      currentScore.toString(),
+                      style: const TextStyle(fontSize: 30, color: Colors.white),
+                    ),
+                  ],
+                ),
+                const Text(
+                  'High Score',
+                  style: TextStyle(color: Colors.white),
+                ),
+              ],
+            ),
           ),
           Expanded(
             flex: 3,
@@ -150,10 +208,8 @@ class _HomePageState extends State<HomePage> {
                 child: MaterialButton(
                   child: Text('P L A Y'),
                   textColor: Colors.white,
-                  color: Colors.pink,
-                  onPressed: () {
-                    gameStart();
-                  },
+                  color: gameStarted ? Colors.grey : Colors.pink,
+                  onPressed: gameStarted ? () {} : gameStart,
                 ),
               ),
             ),
